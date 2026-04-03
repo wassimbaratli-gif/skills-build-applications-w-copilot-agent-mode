@@ -1,16 +1,18 @@
 from django.core.management.base import BaseCommand
 from octofit_tracker.models import User, Team, Activity, Leaderboard, Workout
 
+
 class Command(BaseCommand):
     help = 'Populate the octofit_db database with test data'
 
     def handle(self, *args, **kwargs):
-        # Clear existing data
-        User.objects.all().delete()
-        Team.objects.all().delete()
-        Activity.objects.all().delete()
-        Leaderboard.objects.all().delete()
-        Workout.objects.all().delete()
+        # Use pymongo to drop collections for a clean state
+        from django.conf import settings
+        from pymongo import MongoClient
+        client = MongoClient(settings.DATABASES['default']['CLIENT']['host'], settings.DATABASES['default']['CLIENT']['port'])
+        db = client[settings.DATABASES['default']['NAME']]
+        for collection in ['octofit_tracker_user', 'octofit_tracker_team', 'octofit_tracker_activity', 'octofit_tracker_leaderboard', 'octofit_tracker_workout']:
+            db[collection].drop()
 
         # Create teams
         marvel = Team.objects.create(name='marvel', description='Marvel Team')
